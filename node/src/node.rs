@@ -8,7 +8,7 @@ use store::Store;
 use tokio::sync::mpsc::{channel, Receiver};
 
 /// The default channel capacity for this module.
-pub const CHANNEL_CAPACITY: usize = 1_000;
+pub const CHANNEL_CAPACITY: usize = 1_0000;
 
 pub struct Node {
     pub commit: Receiver<Block>,

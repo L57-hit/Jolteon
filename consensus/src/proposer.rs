@@ -2,6 +2,7 @@ use crate::config::{Committee, Stake};
 use crate::consensus::{ConsensusMessage, Round};
 use crate::messages::{Block, QC, TC};
 use bytes::Bytes;
+//se rand::Rng;
 use crypto::{Digest, PublicKey, SignatureService};
 use futures::stream::futures_unordered::FuturesUnordered;
 use futures::stream::StreamExt as _;
@@ -9,6 +10,7 @@ use log::{debug, info};
 use network::{CancelHandler, ReliableSender};
 use std::collections::HashSet;
 use tokio::sync::mpsc::{Receiver, Sender};
+
 
 #[derive(Debug)]
 pub enum ProposerMessage {
@@ -19,11 +21,15 @@ pub enum ProposerMessage {
 pub struct Proposer {
     name: PublicKey,
     committee: Committee,
+    //parameters: Parameters,
     signature_service: SignatureService,
     rx_mempool: Receiver<Digest>,
     rx_message: Receiver<ProposerMessage>,
     tx_loopback: Sender<Block>,
     buffer: HashSet<Digest>,
+    data_buffer: HashSet<Digest>,
+    max_block_data_bytes: usize,
+    target_payload_size: usize,
     network: ReliableSender,
 }
 
@@ -31,6 +37,8 @@ impl Proposer {
     pub fn spawn(
         name: PublicKey,
         committee: Committee,
+        max_block_data_bytes: usize,
+        target_payload_size: usize,
         signature_service: SignatureService,
         rx_mempool: Receiver<Digest>,
         rx_message: Receiver<ProposerMessage>,
@@ -45,6 +53,9 @@ impl Proposer {
                 rx_message,
                 tx_loopback,
                 buffer: HashSet::new(),
+                data_buffer: HashSet::new(),
+                max_block_data_bytes,
+                target_payload_size,
                 network: ReliableSender::new(),
             }
             .run()
@@ -59,17 +70,39 @@ impl Proposer {
     }
 
     async fn make_block(&mut self, round: Round, qc: QC, tc: Option<TC>) {
-        // Generate a new block.
-        let block = Block::new(
-            qc,
-            tc,
-            self.name,
-            round,
-            /* payload */ self.buffer.drain().collect(),
-            self.signature_service.clone(),
-        )
-        .await;
 
+        // want to put in负载总大小
+        let mut current_data_size: usize = 0;
+
+        // 生成虚拟的无用数据，填充到目标大小
+        while current_data_size < self.max_block_data_bytes {
+            // 生成一个随机的伪 Digest（填充数据）
+            let fake_data = Digest(rand::random::<[u8; 32]>());
+            self.data_buffer.insert(fake_data.clone()); // 插入到缓冲区
+            current_data_size += fake_data.size(); // 更新当前负载大小
+        }
+
+        let mut current_payload_size: usize = self.buffer.iter().map(|d| d.size()).sum();
+
+        while current_payload_size < self.target_payload_size {
+        // 生成一个随机的伪 Digest（填充数据）
+            let fake_data = Digest(rand::random::<[u8; 32]>());
+            self.buffer.insert(fake_data.clone()); // 插入到缓冲区
+            current_payload_size += fake_data.size(); // 更新当前负载大小
+        }
+
+            // Generate a new block.
+            let block = Block::new(
+                qc,
+                tc,
+                self.name,
+                round,
+                /* payload */ self.buffer.drain().collect(),
+                /* data */ self.data_buffer.drain().collect(),
+                self.signature_service.clone(),
+            )
+            .await;
+        
         if !block.payload.is_empty() {
             info!("Created {}", block);
 
@@ -102,6 +135,8 @@ impl Proposer {
             .await
             .expect("Failed to send block");
 
+        self.data_buffer.clear();
+        //self.buffer.clear();
         // Control system: Wait for 2f+1 nodes to acknowledge our block before continuing.
         let mut wait_for_quorum: FuturesUnordered<_> = names
             .into_iter()
@@ -125,8 +160,9 @@ impl Proposer {
         loop {
             tokio::select! {
                 Some(digest) = self.rx_mempool.recv() => {
-                    //if self.buffer.len() < 155 {
+                    //if self.buffer.len() < 82 {
                         self.buffer.insert(digest);
+                        //debug!("buffer_size: {}", self.buffer.len());
                     //}
                 },
                 Some(message) = self.rx_message.recv() => match message {

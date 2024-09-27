@@ -20,6 +20,7 @@ pub struct Block {
     pub author: PublicKey,
     pub round: Round,
     pub payload: Vec<Digest>,
+    pub data: Vec<Digest>,
     pub signature: Signature,
 }
 
@@ -30,6 +31,7 @@ impl Block {
         author: PublicKey,
         round: Round,
         payload: Vec<Digest>,
+        data: Vec<Digest>,
         mut signature_service: SignatureService,
     ) -> Self {
         let block = Self {
@@ -38,6 +40,7 @@ impl Block {
             author,
             round,
             payload,
+            data,
             signature: Signature::default(),
         };
         let signature = signature_service.request_signature(block.digest()).await;
@@ -93,12 +96,13 @@ impl fmt::Debug for Block {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(
             f,
-            "{}: B({}, {}, {:?}, {})",
+            "{}: B({}, {}, {:?}, {},{})",
             self.digest(),
             self.author,
             self.round,
             self.qc,
             self.payload.iter().map(|x| x.size()).sum::<usize>(),
+            self.data.iter().map(|x| x.size()).sum::<usize>(),
         )
     }
 }

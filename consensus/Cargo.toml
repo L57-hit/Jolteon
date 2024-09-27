@@ -17,6 +17,7 @@ futures = "0.3.8"
 async-recursion = "1.0.0"
 base64 = "0.13.0"
 async-trait = "0.1.50"
+rand = "0.8"
 
 store = { path = "../store" }
 crypto = { path = "../crypto" }

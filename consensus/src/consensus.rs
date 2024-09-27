@@ -113,6 +113,8 @@ impl Consensus {
         Proposer::spawn(
             name,
             committee.clone(),
+            parameters.max_block_data_bytes,
+            parameters.target_payload_size,
             signature_service,
             rx_mempool,
             /* rx_message */ rx_proposer,

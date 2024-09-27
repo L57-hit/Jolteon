@@ -14,7 +14,7 @@ def local(ctx):
     bench_params = {
         "faults": 0,
         "nodes": 4,
-        "rate": 1_000,
+        "rate": 10_000,
         "tx_size": 512,
         "duration": 20,
     }
@@ -22,12 +22,14 @@ def local(ctx):
         "consensus": {
             "timeout_delay": 1_000,
             "sync_retry_delay": 10_000,
+            "max_block_data_bytes": 0,
+            "target_payload_size" : 0,
         },
         "mempool": {
             "gc_depth": 50,
             "sync_retry_delay": 5_000,
             "sync_retry_nodes": 3,
-            "batch_size": 15_000,
+            "batch_size": 50_000,
             "max_batch_delay": 10,
         },
     }
@@ -107,6 +109,8 @@ def remote(ctx):
         "consensus": {
             "timeout_delay": 5_000,
             "sync_retry_delay": 5_000,
+            "max_block_data_bytes": 0,
+            "target_payload_size" : 0,
         },
         "mempool": {
             "gc_depth": 50,
