@@ -1,8 +1,8 @@
 {
     "testbed": "alberto-hotstuff",
     "key": {
-        "name": "aws",
-        "path": "/Users/alberto/.ssh/aws"
+        "name": "mykey",
+        "path": "/home/ubuntu/LBFT/benchmark/mykey.pem"
     },
     "ports": {
         "consensus": 8000,
@@ -11,17 +11,17 @@
     },
     "repo": {
         "name": "hotstuff",
-        "url": "https://github.com/asonnino/hotstuff.git",
+        "url": "https://github.com/L57-hit/Jolteon.git",
         "branch": "main"
     },
     "instances": {
-        "type": "m5d.8xlarge",
+        "type": "c5.xlarge",
         "regions": [
             "us-east-1",
-            "eu-north-1",
-            "ap-southeast-2",
             "us-west-1",
-            "ap-northeast-1"
+            "ap-northeast-1",
+            "ap-southeast-1",
+            "eu-west-2"
         ]
     }
 }
