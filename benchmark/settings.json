@@ -2,7 +2,7 @@
     "testbed": "alberto-hotstuff",
     "key": {
         "name": "mykey",
-        "path": "/home/ubuntu/LBFT/benchmark/mykey.pem"
+        "path": "/home/ubuntu/Jolteon/benchmark/mykey.pem"
     },
     "ports": {
         "consensus": 8000,
@@ -10,7 +10,7 @@
         "front": 6000
     },
     "repo": {
-        "name": "hotstuff",
+        "name": "Jolteon",
         "url": "https://github.com/L57-hit/Jolteon.git",
         "branch": "main"
     },
